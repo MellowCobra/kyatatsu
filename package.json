@@ -1,0 +1,32 @@
+{
+  "name": "clay-shaper",
+  "version": "1.0.0",
+  "description": "A javascript library for managing data models and interfacing with Couchbase buckets. Edit",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MellowCobra/clay-shaper.git"
+  },
+  "keywords": [
+    "couchbase",
+    "model",
+    "javascript",
+    "node"
+  ],
+  "author": "Grayson Dubois @MellowCobra",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/MellowCobra/clay-shaper/issues"
+  },
+  "homepage": "https://github.com/MellowCobra/clay-shaper#readme",
+  "devDependencies": {
+    "mocha": "^4.0.1"
+  },
+  "dependencies": {
+    "couchbase": "^2.4.1",
+    "uuid": "^3.1.0"
+  }
+}
