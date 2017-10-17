@@ -1,4 +1,4 @@
-const shaper = require('../index.js')
+const kyatatsu = require('../index.js')
 
 let schema = {
     subject: {
@@ -13,7 +13,7 @@ let schema = {
     }
 }
 
-shaper.registerModel('History', schema)
-let History = shaper.model('History', schema)
+kyatatsu.registerModel('History', schema)
+let History = kyatatsu.model('History', schema)
 
 module.exports = History

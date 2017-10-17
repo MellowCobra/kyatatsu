@@ -1,4 +1,4 @@
-const shaper = require('../index.js')
+const kyatatsu = require('../index.js')
 
 let schema = {
     name: {
@@ -13,8 +13,8 @@ let schema = {
     }
 }
 
-shaper.registerModel('Person', schema)
-let Person = shaper.model('Person', schema)
+kyatatsu.registerModel('Person', schema)
+let Person = kyatatsu.model('Person', schema)
 
 Person.createNew = function(opts) {
     return new Promise( (resolve, reject) => {

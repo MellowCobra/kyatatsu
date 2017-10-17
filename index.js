@@ -5,7 +5,7 @@ const couchbase = require('couchbase')
 const N1qlQuery = couchbase.N1qlQuery
 const uuid = require('uuid/v4')
 
-class ClayShaper {
+class Kyatatsu {
     constructor(opts){
         opts = opts || {}
 
@@ -38,9 +38,9 @@ class ClayShaper {
     }
 
     model(name) {
-        let shaper = this
+        let kyatatsu = this
         let schema = this.models[name]
-        if (schema == null) throw shaper.errors.modelNotRegistered(name)
+        if (schema == null) throw kyatatsu.errors.modelNotRegistered(name)
 
         // Return an object constructor for a model
         let model = function(opts) {
@@ -55,7 +55,7 @@ class ClayShaper {
                     if (opts[key] != null) {
                         this[key] = opts[key]
                     } else {
-                        throw shaper.errors.missingProperty(name, key)
+                        throw kyatatsu.errors.missingProperty(name, key)
                     }
                 }
             }
@@ -83,7 +83,7 @@ class ClayShaper {
                                 'type': this[key]._type
                             }
                         } else if (schema[key].required === true) {
-                            if (this[key] == null) throw shaper.errors.missingProperty(name, key)
+                            if (this[key] == null) throw kyatatsu.errors.missingProperty(name, key)
                             update[key] = this[key]
                         } else if (this[key] != null) {
                             update[key] = this[key]
@@ -92,9 +92,9 @@ class ClayShaper {
 
                     console.log(update)
 
-                    shaper.bucket.upsert(keyspaceRef, update, (err, res) => {
+                    kyatatsu.bucket.upsert(keyspaceRef, update, (err, res) => {
                         if (err) reject(err)
-                        shaper.bucket.get(keyspaceRef,(err, res) => {
+                        kyatatsu.bucket.get(keyspaceRef,(err, res) => {
                             if (err) reject(err)
                             resolve(res.value)
                         })
@@ -119,7 +119,7 @@ class ClayShaper {
                         } else if (opts[key] != null) {
                             newModel[key] = opts[key]
                         } else {
-                            throw shaper.errors.missingProperty(name, key)
+                            throw kyatatsu.errors.missingProperty(name, key)
                         }
                     }
                 }
@@ -130,10 +130,10 @@ class ClayShaper {
 
                 let keyspaceRef = `${name}:${id}`
 
-                shaper.bucket.upsert(keyspaceRef, newModel, (err, res) => {
+                kyatatsu.bucket.upsert(keyspaceRef, newModel, (err, res) => {
                     if (err) reject(err)
                     
-                    shaper.bucket.get(keyspaceRef, (err, res) => {
+                    kyatatsu.bucket.get(keyspaceRef, (err, res) => {
                         if (err) reject(err)
                         resolve(res.value)
                     })
@@ -184,4 +184,4 @@ class ClayShaper {
     }
 }
 
-module.exports = new ClayShaper()
+module.exports = new Kyatatsu()

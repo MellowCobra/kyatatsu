@@ -1,14 +1,14 @@
 {
-  "name": "clay-shaper",
+  "name": "kyatatsu",
   "version": "1.0.0",
-  "description": "A javascript library for managing data models and interfacing with Couchbase buckets. Edit",
+  "description": "A javascript library for managing data models and interfacing with Couchbase buckets.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MellowCobra/clay-shaper.git"
+    "url": "git+https://github.com/MellowCobra/kyatatsu.git"
   },
   "keywords": [
     "couchbase",

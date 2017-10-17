@@ -1,11 +1,9 @@
-const shaper = require('../index.js')
-shaper.couchbaseUrl = 'couchbase://127.0.0.1'
-shaper.bucketName = 'balance'
+const kyatatsu = require('../index.js')
+kyatatsu.openBucket()
 
 const Person = require('./person.js')
 const History = require('./history.js')
 
-shaper.openBucket()
 
 Person.createNew({
     name: "Grayson",
