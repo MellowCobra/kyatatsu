@@ -14,7 +14,7 @@ let schema = {
 }
 
 kyatatsu.registerModel('Person', schema)
-let Person = kyatatsu.model('Person', schema)
+let Person = kyatatsu.model('Person')
 
 Person.createNew = function(opts) {
     return new Promise( (resolve, reject) => {

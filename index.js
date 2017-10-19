@@ -146,11 +146,18 @@ class Kyatatsu {
 
     query(queryString, params, modelName) {
         return new Promise( (resolve, reject) => {
+
+            params = params || []
+
             let query = N1qlQuery.fromString(queryString)
             this.bucket.query(query, params, (err, rows) => {
-                if (err) reject(err)
-                else if (rows == null || rows.length === 0) {
-                    resolve(this._NoQueryResultsError(queryString))
+                if (err) {
+                    if (err.code === 3000) {
+                        err.info = `Syntax error in N1qlQuery: ${query}`
+                    }
+                    reject(err)
+                } else if (rows == null || rows.length === 0) {
+                    resolve(this.errors.noQueryResults(queryString))
                 } else {
                     if (modelName != null) {
                         try {
