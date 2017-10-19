@@ -49,7 +49,9 @@ class Kyatatsu {
             // Copy the keys into 'this' instance
             // If key has a default property, call it to assign the value to the key
             for (let key in schema) {
-                if (schema[key].default) {
+                if (opts.hasOwnProperty(key)) {
+                    this[key] = opts[key]
+                } else if (schema[key].default) {
                     this[key] = schema[key].default()
                 } else if (schema[key].required) {
                     if (opts[key] != null) {
@@ -152,7 +154,7 @@ class Kyatatsu {
         return model
     }
 
-    query(queryString, params, modelName) {
+    query(queryString, params) {
         return new Promise( (resolve, reject) => {
 
             params = params || []
@@ -165,18 +167,9 @@ class Kyatatsu {
                     }
                     reject(err)
                 } else if (rows == null || rows.length === 0) {
-                    resolve(this.errors.noQueryResults(queryString))
+                    reject(this.errors.noQueryResults(queryString))
                 } else {
-                    if (modelName != null) {
-                        try {
-                            let result = new this.model(modelName)(rows[0][Object.keys(rows[0])[0]])
-                            resolve(result)
-                        } catch (err) {
-                            reject (err)
-                        }
-                    } else {
-                        resolve(rows)
-                    }
+                    resolve(rows)
                 }
             })
         })
