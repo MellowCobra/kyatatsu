@@ -19,9 +19,9 @@
   "author": "Grayson Dubois @MellowCobra",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/MellowCobra/clay-shaper/issues"
+    "url": "https://github.com/MellowCobra/kyatatsu/issues"
   },
-  "homepage": "https://github.com/MellowCobra/clay-shaper#readme",
+  "homepage": "https://github.com/MellowCobra/kyatatsu#readme",
   "devDependencies": {
     "mocha": "^4.0.1"
   },
