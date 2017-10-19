@@ -109,7 +109,11 @@ class Kyatatsu {
                 
                 for (let key in schema) {
                     if (schema[key].default) {
-                        newModel[key] = schema[key].default()
+                        if (typeof schema[key].default === 'function') {
+                            newModel[key] = schema[key].default()
+                        } else {
+                            newModel[key] = schema[key].default
+                        }
                     } else if (schema[key].required) {
                         if (schema[key].type != null && schema[key].type === 'ref') {
                             newModel[key] = {
@@ -120,6 +124,10 @@ class Kyatatsu {
                             newModel[key] = opts[key]
                         } else {
                             throw kyatatsu.errors.missingProperty(name, key)
+                        }
+                    } else {
+                        if (opts.hasOwnProperty(key)) {
+                            newModel[key] = opts[key]
                         }
                     }
                 }
