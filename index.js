@@ -66,7 +66,6 @@ class Kyatatsu {
 
             this.save = function() {
                 return new Promise( (resolve, reject) => {
-                    console.log("Saving...")
                     if (this._id == null) this._id = uuid()
                     if (this._type == null) this._type = name
                     let keyspaceRef = `${this._type}:${this._id}`
@@ -98,8 +97,6 @@ class Kyatatsu {
                             }
                         }
                     }
-
-                    console.log(update)
 
                     kyatatsu.bucket.upsert(keyspaceRef, update, (err, res) => {
                         if (err) reject(err)
@@ -172,8 +169,6 @@ class Kyatatsu {
                         err.info = `Syntax error in N1qlQuery: ${query}`
                     }
                     reject(err)
-                } else if (rows == null || rows.length === 0) {
-                    reject(this.errors.noQueryResults(queryString))
                 } else {
                     resolve(rows)
                 }
