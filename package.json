@@ -1,6 +1,6 @@
 {
   "name": "kyatatsu",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A javascript library for managing data models and interfacing with Couchbase buckets.",
   "main": "index.js",
   "scripts": {
