@@ -47,7 +47,6 @@ class Kyatatsu {
             opts = opts || {}
 
             // Copy the keys into 'this' instance
-            // If key has a default property, call it to assign the value to the key
             for (let key in schema) {
                 if (opts.hasOwnProperty(key)) {
                     this[key] = opts[key]
@@ -78,17 +77,25 @@ class Kyatatsu {
                     }
 
                     for (let key in schema) {
-                        // If this property is a reference
-                        if (schema[key].type && schema[key].type === 'ref') {
-                            update[key] = {
-                                '$ref': this[key]._id,
-                                'type': this[key]._type
+                        if (this[key] != null) { // If I have a value for this property
+                            if (schema[key].type && schema[key].type === 'ref') { // If property is reference, save as a ref
+                                update[key] = {
+                                    '$ref': this[key]._id,
+                                    'type': this[key]._type
+                                }
+                            } else { // otherwise just copy it onto the update
+                                update[key] = this[key]
                             }
-                        } else if (schema[key].required === true) {
-                            if (this[key] == null) throw kyatatsu.errors.missingProperty(name, key)
-                            update[key] = this[key]
-                        } else if (this[key] != null) {
-                            update[key] = this[key]
+                        } else { // If I don't have a value for this property
+                            if (schema[key].default) { // If there is a default value specified in the schema, use it
+                                if (typeof schema[key].default === 'function') {
+                                    update[key] = schema[key].default()
+                                } else {
+                                    update[key] = schema[key].default
+                                }
+                            } else if (schema[key].required) { // If the schema states this is required, error
+                                throw kyatatsu.errors.missingProperty(name, key)
+                            }
                         }
                     }
 
@@ -106,30 +113,29 @@ class Kyatatsu {
         }
 
         model.create = function(opts) {
+            opts = opts || {}
             return new Promise( (resolve, reject) => {
                 let newModel = {}
                 
                 for (let key in schema) {
-                    if (schema[key].default) {
-                        if (typeof schema[key].default === 'function') {
-                            newModel[key] = schema[key].default()
-                        } else {
-                            newModel[key] = schema[key].default
-                        }
-                    } else if (schema[key].required) {
-                        if (schema[key].type != null && schema[key].type === 'ref') {
+                    if (opts[key] != null) { // If I have a value for this property
+                        if (schema[key].type && schema[key].type === 'ref') { // If property is reference, save as a ref
                             newModel[key] = {
                                 '$ref': opts[key]._id,
                                 'type': opts[key]._type
-                            } 
-                        } else if (opts[key] != null) {
+                            }
+                        } else { // otherwise just copy it onto the update
                             newModel[key] = opts[key]
-                        } else {
-                            throw kyatatsu.errors.missingProperty(name, key)
                         }
-                    } else {
-                        if (opts.hasOwnProperty(key)) {
-                            newModel[key] = opts[key]
+                    } else { // If I don't have a value for this property
+                        if (schema[key].default) { // If there is a default value specified in the schema, use it
+                            if (typeof schema[key].default === 'function') {
+                                newModel[key] = schema[key].default()
+                            } else {
+                                newModel[key] = schema[key].default
+                            }
+                        } else if (schema[key].required) { // If the schema states this is required, error
+                            throw kyatatsu.errors.missingProperty(name, key)
                         }
                     }
                 }
