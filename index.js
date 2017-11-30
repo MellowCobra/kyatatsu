@@ -51,7 +51,11 @@ class Kyatatsu {
                 if (opts.hasOwnProperty(key)) {
                     this[key] = opts[key]
                 } else if (schema[key].default) {
-                    this[key] = schema[key].default()
+                    if (typeof schema[key].default === 'function') {
+                        this[key] = schema[key].default()
+                    } else {
+                        this[key] = schema[key].default
+                    }
                 } else if (schema[key].required) {
                     if (opts[key] != null) {
                         this[key] = opts[key]
@@ -64,8 +68,10 @@ class Kyatatsu {
             if (opts._id) this._id = opts._id
             if (opts._type) this._type = opts._type
 
-            this.save = function() {
+            this.save = function(saveOpts) {
                 return new Promise( (resolve, reject) => {
+                    saveOpts = saveOpts || {}
+
                     if (this._id == null) this._id = uuid()
                     if (this._type == null) this._type = name
                     let keyspaceRef = `${this._type}:${this._id}`
@@ -79,8 +85,8 @@ class Kyatatsu {
                         if (this[key] != null) { // If I have a value for this property
                             if (schema[key].type && schema[key].type === 'ref') { // If property is reference, save as a ref
                                 update[key] = {
-                                    '$ref': this[key]._id,
-                                    'type': this[key]._type
+                                    '$ref': this[key]['$ref'] || this[key]._id,
+                                    '_type': this[key]._type
                                 }
                             } else { // otherwise just copy it onto the update
                                 update[key] = this[key]
@@ -98,7 +104,11 @@ class Kyatatsu {
                         }
                     }
 
-                    kyatatsu.bucket.upsert(keyspaceRef, update, (err, res) => {
+                    let upsertOpts = {
+                        persist_to: saveOpts.persistToDisc === true ? 1 : 0
+                    }
+
+                    kyatatsu.bucket.upsert(keyspaceRef, update, upsertOpts, (err, res) => {
                         if (err) reject(err)
                         kyatatsu.bucket.get(keyspaceRef,(err, res) => {
                             if (err) reject(err)
@@ -109,8 +119,10 @@ class Kyatatsu {
             }
         }
 
-        model.create = function(opts) {
+        model.create = function(opts, createOpts) {
             opts = opts || {}
+            createOpts = createOpts || {}
+
             return new Promise( (resolve, reject) => {
                 let newModel = {}
                 
@@ -118,8 +130,8 @@ class Kyatatsu {
                     if (opts[key] != null) { // If I have a value for this property
                         if (schema[key].type && schema[key].type === 'ref') { // If property is reference, save as a ref
                             newModel[key] = {
-                                '$ref': opts[key]._id,
-                                'type': opts[key]._type
+                                '$ref': opts[key]['$ref'] || opts[key]._id,
+                                '_type': opts[key]._type
                             }
                         } else { // otherwise just copy it onto the update
                             newModel[key] = opts[key]
@@ -143,7 +155,11 @@ class Kyatatsu {
 
                 let keyspaceRef = `${name}:${id}`
 
-                kyatatsu.bucket.upsert(keyspaceRef, newModel, (err, res) => {
+                let upsertOpts = {
+                    persist_to: createOpts.persistToDisc === true ? 1 : 0
+                }
+
+                kyatatsu.bucket.upsert(keyspaceRef, newModel, upsertOpts, (err, res) => {
                     if (err) reject(err)
                     
                     kyatatsu.bucket.get(keyspaceRef, (err, res) => {
