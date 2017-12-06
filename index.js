@@ -82,8 +82,8 @@ class Kyatatsu {
                     }
 
                     for (let key in schema) {
-                        if (this[key] != null) { // If I have a value for this property
-                            if (schema[key].type && schema[key].type === 'ref') { // If property is reference, save as a ref
+                        if (opts.hasOwnProperty(key)) { // If I have a value for this property
+                            if (opts[key] != null && schema[key].type && schema[key].type === 'ref') { // If property is reference, save as a ref
                                 update[key] = {
                                     '$ref': this[key]['$ref'] || this[key]._id,
                                     '_type': this[key]._type
@@ -127,8 +127,8 @@ class Kyatatsu {
                 let newModel = {}
                 
                 for (let key in schema) {
-                    if (opts[key] != null) { // If I have a value for this property
-                        if (schema[key].type && schema[key].type === 'ref') { // If property is reference, save as a ref
+                    if (opts.hasOwnProperty(key)) { // If I have a value for this property
+                        if (opts[key] != null && schema[key].type && schema[key].type === 'ref') { // If property is reference, save as a ref
                             newModel[key] = {
                                 '$ref': opts[key]['$ref'] || opts[key]._id,
                                 '_type': opts[key]._type
@@ -164,7 +164,7 @@ class Kyatatsu {
                     
                     kyatatsu.bucket.get(keyspaceRef, (err, res) => {
                         if (err) reject(err)
-                        resolve(res.value)
+                        resolve(res != null ? res.value : null)
                     })
                 })
             })
