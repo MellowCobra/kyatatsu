@@ -6,12 +6,13 @@ const N1qlQuery = couchbase.N1qlQuery
 const uuid = require('uuid/v4')
 
 class Kyatatsu {
-    constructor(opts){
+    constructor(opts) {
         opts = opts || {}
 
         // Set properties from opts
         this.couchbaseUrl = opts.couchbaseUrl || 'couchbase://127.0.0.1'
-        this.bucketName   = opts.bucketName   || 'default'
+        this.bucketName = opts.bucketName || 'default'
+        this.clusterPass = opts.clusterPass || ''
 
         // Init utilities
         this.cluster = {}
@@ -24,13 +25,17 @@ class Kyatatsu {
         this.errors = {
             noQueryResults: this._NoQueryResultsError,
             modelNotRegistered: this._ModelNotRegisteredError,
-            missingProperty: this._MissingPropertyError
+            missingProperty: this._MissingPropertyError,
         }
     }
 
-    openBucket() {
+    openBucket(errorHandler) {
         this.cluster = new couchbase.Cluster(this.couchbaseUrl)
-        this.bucket = this.cluster.openBucket(this.bucketName)
+        this.bucket = this.cluster.openBucket(
+            this.bucketName,
+            this.clusterPass,
+            errorHandler
+        )
     }
 
     registerModel(name, schema) {
@@ -69,7 +74,7 @@ class Kyatatsu {
             if (opts._type) this._type = opts._type
 
             this.save = function(saveOpts) {
-                return new Promise( (resolve, reject) => {
+                return new Promise((resolve, reject) => {
                     saveOpts = saveOpts || {}
 
                     if (this._id == null) this._id = uuid()
@@ -78,43 +83,85 @@ class Kyatatsu {
 
                     let update = {
                         _id: this._id,
-                        _type: this._type
+                        _type: this._type,
+                    }
+
+                    if (saveOpts.debug) {
+                        console.log(
+                            `pre-update for kyatatsu model:\n${JSON.stringify(
+                                this,
+                                null,
+                                4
+                            )}`
+                        )
+                        console.log(
+                            `schema for kyatatsu model:\n${JSON.stringify(
+                                schema,
+                                null,
+                                4
+                            )}`
+                        )
                     }
 
                     for (let key in schema) {
-                        if (opts.hasOwnProperty(key)) { // If I have a value for this property
-                            if (opts[key] != null && schema[key].type && schema[key].type === 'ref') { // If property is reference, save as a ref
+                        if (this.hasOwnProperty(key)) {
+                            // If I have a value for this property
+                            if (
+                                this[key] != null &&
+                                schema[key].type &&
+                                schema[key].type === 'ref'
+                            ) {
+                                // If property is reference, save as a ref
                                 update[key] = {
-                                    '$ref': this[key]['$ref'] || this[key]._id,
-                                    '_type': this[key]._type
+                                    $ref: this[key]['$ref'] || this[key]._id,
+                                    _type: this[key]._type,
                                 }
-                            } else { // otherwise just copy it onto the update
+                            } else {
+                                // otherwise just copy it onto the update
                                 update[key] = this[key]
                             }
-                        } else { // If I don't have a value for this property
-                            if (schema[key].default) { // If there is a default value specified in the schema, use it
+                        } else {
+                            // If I don't have a value for this property
+                            if (schema[key].default) {
+                                // If there is a default value specified in the schema, use it
                                 if (typeof schema[key].default === 'function') {
                                     update[key] = schema[key].default()
                                 } else {
                                     update[key] = schema[key].default
                                 }
-                            } else if (schema[key].required) { // If the schema states this is required, error
+                            } else if (schema[key].required) {
+                                // If the schema states this is required, error
                                 throw kyatatsu.errors.missingProperty(name, key)
                             }
                         }
                     }
 
-                    let upsertOpts = {
-                        persist_to: saveOpts.persistToDisc === true ? 1 : 0
+                    if (saveOpts.debug) {
+                        console.log(
+                            `update for kyatatsu model:\n${JSON.stringify(
+                                update,
+                                null,
+                                4
+                            )}`
+                        )
                     }
 
-                    kyatatsu.bucket.upsert(keyspaceRef, update, upsertOpts, (err, res) => {
-                        if (err) reject(err)
-                        kyatatsu.bucket.get(keyspaceRef,(err, res) => {
+                    let upsertOpts = {
+                        persist_to: saveOpts.persistToDisc === true ? 1 : 0,
+                    }
+
+                    kyatatsu.bucket.upsert(
+                        keyspaceRef,
+                        update,
+                        upsertOpts,
+                        (err, res) => {
                             if (err) reject(err)
-                            resolve(res.value)
-                        })
-                    })
+                            kyatatsu.bucket.get(keyspaceRef, (err, res) => {
+                                if (err) reject(err)
+                                resolve(res.value)
+                            })
+                        }
+                    )
                 })
             }
         }
@@ -123,27 +170,37 @@ class Kyatatsu {
             opts = opts || {}
             createOpts = createOpts || {}
 
-            return new Promise( (resolve, reject) => {
+            return new Promise((resolve, reject) => {
                 let newModel = {}
-                
+
                 for (let key in schema) {
-                    if (opts.hasOwnProperty(key)) { // If I have a value for this property
-                        if (opts[key] != null && schema[key].type && schema[key].type === 'ref') { // If property is reference, save as a ref
+                    if (opts.hasOwnProperty(key)) {
+                        // If I have a value for this property
+                        if (
+                            opts[key] != null &&
+                            schema[key].type &&
+                            schema[key].type === 'ref'
+                        ) {
+                            // If property is reference, save as a ref
                             newModel[key] = {
-                                '$ref': opts[key]['$ref'] || opts[key]._id,
-                                '_type': opts[key]._type
+                                $ref: opts[key]['$ref'] || opts[key]._id,
+                                _type: opts[key]._type,
                             }
-                        } else { // otherwise just copy it onto the update
+                        } else {
+                            // otherwise just copy it onto the update
                             newModel[key] = opts[key]
                         }
-                    } else { // If I don't have a value for this property
-                        if (schema[key].default) { // If there is a default value specified in the schema, use it
+                    } else {
+                        // If I don't have a value for this property
+                        if (schema[key].default != null) {
+                            // If there is a default value specified in the schema, use it
                             if (typeof schema[key].default === 'function') {
                                 newModel[key] = schema[key].default()
                             } else {
                                 newModel[key] = schema[key].default
                             }
-                        } else if (schema[key].required) { // If the schema states this is required, error
+                        } else if (schema[key].required) {
+                            // If the schema states this is required, error
                             throw kyatatsu.errors.missingProperty(name, key)
                         }
                     }
@@ -156,17 +213,22 @@ class Kyatatsu {
                 let keyspaceRef = `${name}:${id}`
 
                 let upsertOpts = {
-                    persist_to: createOpts.persistToDisc === true ? 1 : 0
+                    persist_to: createOpts.persistToDisc === true ? 1 : 0,
                 }
 
-                kyatatsu.bucket.upsert(keyspaceRef, newModel, upsertOpts, (err, res) => {
-                    if (err) reject(err)
-                    
-                    kyatatsu.bucket.get(keyspaceRef, (err, res) => {
+                kyatatsu.bucket.upsert(
+                    keyspaceRef,
+                    newModel,
+                    upsertOpts,
+                    (err, res) => {
                         if (err) reject(err)
-                        resolve(res != null ? res.value : null)
-                    })
-                })
+
+                        kyatatsu.bucket.get(keyspaceRef, (err, res) => {
+                            if (err) reject(err)
+                            resolve(res != null ? res.value : null)
+                        })
+                    }
+                )
             })
         }
 
@@ -174,8 +236,7 @@ class Kyatatsu {
     }
 
     query(queryString, params) {
-        return new Promise( (resolve, reject) => {
-
+        return new Promise((resolve, reject) => {
             params = params || []
 
             let query = N1qlQuery.fromString(queryString)
