@@ -1,32 +1,32 @@
 {
-  "name": "kyatatsu",
-  "version": "1.0.8",
-  "description": "A javascript library for managing data models and interfacing with Couchbase buckets.",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/MellowCobra/kyatatsu.git"
-  },
-  "keywords": [
-    "couchbase",
-    "model",
-    "javascript",
-    "node"
-  ],
-  "author": "Grayson Dubois @MellowCobra",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/MellowCobra/kyatatsu/issues"
-  },
-  "homepage": "https://github.com/MellowCobra/kyatatsu#readme",
-  "devDependencies": {
-    "mocha": "^4.0.1"
-  },
-  "dependencies": {
-    "couchbase": "^2.4.1",
-    "uuid": "^3.1.0"
-  }
+    "name": "kyatatsu",
+    "version": "1.0.8",
+    "description": "A javascript library for managing data models and interfacing with Couchbase buckets.",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/MellowCobra/kyatatsu.git"
+    },
+    "keywords": [
+        "couchbase",
+        "model",
+        "javascript",
+        "node"
+    ],
+    "author": "Grayson Dubois @MellowCobra",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/MellowCobra/kyatatsu/issues"
+    },
+    "homepage": "https://github.com/MellowCobra/kyatatsu#readme",
+    "devDependencies": {
+        "mocha": "^4.0.1"
+    },
+    "dependencies": {
+        "couchbase": "=2.4.6",
+        "uuid": "^3.1.0"
+    }
 }
