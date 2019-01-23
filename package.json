@@ -26,7 +26,7 @@
         "mocha": "^4.0.1"
     },
     "dependencies": {
-        "couchbase": "=2.4.6",
+        "couchbase": "^2.4.6",
         "uuid": "^3.1.0"
     }
 }
