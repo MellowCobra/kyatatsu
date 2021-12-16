@@ -11,7 +11,10 @@ Set up Kyatatsu in you main project script (usually server.js) like so
 const kyatatsu = require('kyatatsu')
 kyatatsu.couchbaseUrl = "couchbase://127.0.0.1"
 kyatatsu.bucketName = "my_bucket"
-kyatatsu.openBucket()
+kyatatsu.connect()
+  .then(cluster => {
+    cluster.query("...etc.")
+  })
 ```
 
 Create your models in their own scripts like so:

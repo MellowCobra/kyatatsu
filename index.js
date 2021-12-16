@@ -249,14 +249,14 @@ class Kyatatsu {
 
         const options = { parameters }
 
-        this.cluster.query(queryString, options, (err, rows) => {
+        this.cluster.query(queryString, options, (err, res) => {
           if (err) {
             if (err.code === 3000) {
               err.info = `Syntax error in N1qlQuery: ${query}`
             }
               reject(err)
           } else {
-            resolve(rows)
+            resolve(res.rows)
           }
         })
       })
