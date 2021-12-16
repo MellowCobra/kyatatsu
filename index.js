@@ -243,11 +243,13 @@ class Kyatatsu {
         return model
     }
 
-    async query(queryString, params) {
+    async query(queryString, parameters) {
       return new Promise((resolve, reject) => {
-        params = params || []
+        parameters = parameters || []
 
-        this.cluster.query(queryString, params, (err, rows) => {
+        const options = { parameters }
+
+        this.cluster.query(queryString, options, (err, rows) => {
           if (err) {
             if (err.code === 3000) {
               err.info = `Syntax error in N1qlQuery: ${query}`
