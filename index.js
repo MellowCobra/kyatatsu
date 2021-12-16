@@ -2,44 +2,48 @@
 'use strict'
 
 const couchbase = require('couchbase')
-const N1qlQuery = couchbase.N1qlQuery
 const uuid = require('uuid/v4')
 
 class Kyatatsu {
     constructor(opts) {
-        opts = opts || {}
+      opts = opts || {}
 
-        // Set properties from opts
-        this.couchbaseUrl = opts.couchbaseUrl || 'couchbase://127.0.0.1'
-        this.bucketName = opts.bucketName || 'default'
-        this.clusterPass = opts.clusterPass || ''
+      // Set properties from opts
+      this.couchbaseUrl = opts.couchbaseUrl || 'couchbase://127.0.0.1'
+      this.bucketName = opts.bucketName || 'default'
+      this.clusterUser = opts.clusterUser || opts.bucketName || ''
+      this.clusterPass = opts.clusterPass || ''
 
-        // Init utilities
-        this.cluster = {}
-        this.bucket = {}
-        // this.openBucket()
+      // Init utilities
+      this.cluster = null
 
-        // Will contain all the models that we have
-        this.models = {}
+      // Will contain all the models that we have
+      this.models = {}
 
-        this.errors = {
-            noQueryResults: this._NoQueryResultsError,
-            modelNotRegistered: this._ModelNotRegisteredError,
-            missingProperty: this._MissingPropertyError,
-        }
+      this.errors = {
+          noQueryResults: this._NoQueryResultsError,
+          modelNotRegistered: this._ModelNotRegisteredError,
+          missingProperty: this._MissingPropertyError,
+      }
     }
 
-    openBucket(errorHandler) {
-        this.cluster = new couchbase.Cluster(this.couchbaseUrl)
-        this.bucket = this.cluster.openBucket(
-            this.bucketName,
-            this.clusterPass,
-            errorHandler
-        )
+    async connect() {
+      return new Promise((resolve, reject) => {
+        couchbase.connect(this.couchbaseUrl, {
+          username: this.clusterUser || this.bucketName || "",
+          password: this.clusterPass || ""
+        }, (err, cluster) => {
+          if (err) return reject(err)
+
+          this.cluster = cluster
+          return resolve(cluster)
+        })
+      })
     }
+
 
     registerModel(name, schema) {
-        this.models[name] = schema
+      this.models[name] = schema
     }
 
     model(name) {
@@ -73,7 +77,7 @@ class Kyatatsu {
             if (opts._id) this._id = opts._id
             if (opts._type) this._type = opts._type
 
-            this.save = function(saveOpts) {
+            this.save = async function(saveOpts) {
                 return new Promise((resolve, reject) => {
                     saveOpts = saveOpts || {}
 
@@ -150,13 +154,15 @@ class Kyatatsu {
                         persist_to: saveOpts.persistToDisc === true ? 1 : 0,
                     }
 
-                    kyatatsu.bucket.upsert(
+                    const collection = kyatatsu.cluster.bucket(kyatatsu.bucketName).collection()
+
+                    collection.upsert(
                         keyspaceRef,
                         update,
                         upsertOpts,
                         (err, res) => {
                             if (err) reject(err)
-                            kyatatsu.bucket.get(keyspaceRef, (err, res) => {
+                            collection.get(keyspaceRef, (err, res) => {
                                 if (err) reject(err)
                                 resolve(res.value)
                             })
@@ -216,14 +222,16 @@ class Kyatatsu {
                     persist_to: createOpts.persistToDisc === true ? 1 : 0,
                 }
 
-                kyatatsu.bucket.upsert(
+                const collection = kyatatsu.cluster.bucket(kyatatsu.bucketName).collection()
+
+                collection.upsert(
                     keyspaceRef,
                     newModel,
                     upsertOpts,
                     (err, res) => {
                         if (err) reject(err)
 
-                        kyatatsu.bucket.get(keyspaceRef, (err, res) => {
+                        collection.get(keyspaceRef, (err, res) => {
                             if (err) reject(err)
                             resolve(res != null ? res.value : null)
                         })
@@ -235,22 +243,21 @@ class Kyatatsu {
         return model
     }
 
-    query(queryString, params) {
-        return new Promise((resolve, reject) => {
-            params = params || []
+    async query(queryString, params) {
+      return new Promise((resolve, reject) => {
+        params = params || []
 
-            let query = N1qlQuery.fromString(queryString)
-            this.bucket.query(query, params, (err, rows) => {
-                if (err) {
-                    if (err.code === 3000) {
-                        err.info = `Syntax error in N1qlQuery: ${query}`
-                    }
-                    reject(err)
-                } else {
-                    resolve(rows)
-                }
-            })
+        this.cluster.query(queryString, params, (err, rows) => {
+          if (err) {
+            if (err.code === 3000) {
+              err.info = `Syntax error in N1qlQuery: ${query}`
+            }
+              reject(err)
+          } else {
+            resolve(rows)
+          }
         })
+      })
     }
 
     // Custom Errors

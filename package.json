@@ -1,6 +1,6 @@
 {
   "name": "kyatatsu",
-  "version": "1.0.10",
+  "version": "2.0.0",
   "description": "A javascript library for managing data models and interfacing with Couchbase buckets.",
   "main": "index.js",
   "scripts": {
@@ -25,10 +25,10 @@
   },
   "homepage": "https://github.com/MellowCobra/kyatatsu#readme",
   "devDependencies": {
-    "mocha": "^4.0.1"
+    "mocha": "^9.1.3"
   },
   "dependencies": {
-    "couchbase": "^2.4.6",
+    "couchbase": "^3.2.3",
     "uuid": "^3.1.0",
     "snyk": "^1.189.0"
   },
