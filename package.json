@@ -30,7 +30,7 @@
   "dependencies": {
     "couchbase": "^3.2.3",
     "uuid": "^3.1.0",
-    "snyk": "^1.189.0"
+    "snyk": "^1.996.0"
   },
   "snyk": true
 }
